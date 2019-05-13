@@ -14,13 +14,20 @@ const router = express.Router();
 
 const User = require("../../models/User");
 
-const validateRegisterInput = require("../../");
+const validateRegisterInput = require("../../validation/register");
+const validateLoginInput = require("../../validation/login");
 
 router.post("/register", (req, res) => {
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
   const query = { email: req.body.email };
   User.findOne(query).then(user => {
     if (user) {
-      return res.status(400).json({ email: "The email is already in use" });
+      errors.email = "The email is already in use";
+      return res.status(400).json(errors);
     } else {
       const avatar = gravatar.url(req.body.email, {
         s: "200",
@@ -57,9 +64,14 @@ router.get(
 );
 
 router.post("/login", (req, res) => {
+  const { errors, isValid } = validateLoginInput(req.body);
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
   const { email, password } = req.body;
   User.findOne({ email }).then(user => {
-    if (!user) return res.status(400).json({ err: "User not found" });
+    errors.email = "User not found";
+    if (!user) return res.status(400).json(errors);
 
     bcrypt.compare(password, user.password).then(isMatch => {
       if (isMatch) {
@@ -72,7 +84,10 @@ router.post("/login", (req, res) => {
           });
         });
         // return res.json({ success: "success" });
-      } else return res.status(401).json({ password: "password doesnt match" });
+      } else {
+        errors.password = "password incorrect";
+        return res.status(401).json(errors);
+      }
     });
   });
 });
