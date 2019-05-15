@@ -9,6 +9,8 @@ const passport = require("passport");
 const Profile = require("../../models/Profile");
 const User = require("../../models/User");
 
+const ValidateProfileInput = require("../../validation/profile");
+
 router.get("/test", (req, res) => res.send("hi"));
 router.get(
   "/",
@@ -31,10 +33,13 @@ router.post(
   "/",
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
-    const errors = {};
+    // const errors = {};
     profileFields = {};
-    profileFields.user = req.user.id;
-
+    const { errors, isValid } = ValidateProfileInput(req.body);
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+    profileFields.user = req.user._id;
     if (req.body.handle) profileFields.handle = req.body.handle;
     if (req.body.company) profileFields.company = req.body.clocation;
     if (req.body.location) profileFields.location = req.body.location;
@@ -52,20 +57,23 @@ router.post(
     if (req.body.instagram)
       profileFields.socials.instagram = req.body.instagram;
     if (req.body.twitter) profileFields.socials.twitter = req.body.twitter;
-
-    Profile.findOne({ user: releaseEvents.user.id }).then(profile => {
+    Profile.findOne({ user: req.user.id }).then(profile => {
       if (profile) {
+        console.log("got here");
         Profile.findOneAndUpdate(
           { user: req.user.id },
           { $set: profileFields },
           { new: true }
         ).then(profile => res.json(profile));
+        console.log("hi");
       } else {
         Profile.findOne({ handle: profileFields.handle }).then(profile => {
           if (profile) {
             errors.handle = "This handle already eists";
             return res.status(400).json(errors);
           }
+
+          new Profile(profileFields).save().then(profile => res.json(profile));
         });
       }
     });
