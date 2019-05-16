@@ -17,7 +17,8 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
     errors = {};
-    Profile.findOne({ user: req.user.id })
+    Profile.findOne({ user: req.user._id })
+      .populate("user", ["name", "avatar"])
       .then(profile => {
         if (!profile) {
           errors.noprofile = "This user has no profile";
@@ -57,26 +58,29 @@ router.post(
     if (req.body.instagram)
       profileFields.socials.instagram = req.body.instagram;
     if (req.body.twitter) profileFields.socials.twitter = req.body.twitter;
-    Profile.findOne({ user: req.user.id }).then(profile => {
-      if (profile) {
-        console.log("got here");
-        Profile.findOneAndUpdate(
-          { user: req.user.id },
-          { $set: profileFields },
-          { new: true }
-        ).then(profile => res.json(profile));
-        console.log("hi");
-      } else {
-        Profile.findOne({ handle: profileFields.handle }).then(profile => {
-          if (profile) {
-            errors.handle = "This handle already eists";
-            return res.status(400).json(errors);
-          }
-
-          new Profile(profileFields).save().then(profile => res.json(profile));
-        });
-      }
-    });
+    Profile.findOne({ user: req.user._id })
+      .populate("user", ["name", "avatar"])
+      .then(profile => {
+        if (profile) {
+          Profile.findOneAndUpdate(
+            { user: req.user.id },
+            { $set: profileFields },
+            { new: true }
+          ).then(profile => {
+            res.json(profile);
+          });
+        } else {
+          Profile.findOne({ handle: profileFields.handle }).then(profile => {
+            if (profile) {
+              errors.handle = "This handle already eists";
+              return res.status(400).json(errors);
+            }
+            new Profile(profileFields)
+              .save()
+              .then(profile => res.json(profile));
+          });
+        }
+      });
   }
 );
 module.exports = router;
