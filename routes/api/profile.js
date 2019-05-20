@@ -12,6 +12,49 @@ const User = require("../../models/User");
 const ValidateProfileInput = require("../../validation/profile");
 
 router.get("/test", (req, res) => res.send("hi"));
+
+router.get("/handle/:handle", (req, res) => {
+  errors = {};
+  Profile.findOne({ handle: req.params.handle })
+    .populate("user", ["name", "avatar"])
+    .then(profile => {
+      if (!profile) {
+        errors.profile = "There is no user with this handle";
+        res.status(404).send(errors);
+      }
+      return res.json(profile);
+    })
+    .catch(err => res.status(400).json(err));
+});
+
+router.get("/user/:user_id", (req, res) => {
+  errors = {};
+  Profile.findOne({ user: req.params.user_id })
+    .populate("user", ["name", "avatar"])
+    .then(profile => {
+      if (!profile) {
+        errors.profile = "User not found";
+        res.status(404).send(errors);
+      }
+      return res.json(profile);
+    })
+    .catch(err => res.status(400).json(err));
+});
+
+router.get("/all", (req, res) => {
+  const errrors = {};
+  Profile.find()
+    .populate("user", ["name", "avatar"])
+    .then(profiles => {
+      if (!profiles) {
+        errors.profile = "No user profile found";
+        res.status(404).send(errors);
+      }
+      return res.json(profiles);
+    })
+    .catch(err => res.json(err));
+});
+
 router.get(
   "/",
   passport.authenticate("jwt", { session: false }),
