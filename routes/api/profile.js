@@ -11,6 +11,10 @@ const User = require("../../models/User");
 
 const ValidateProfileInput = require("../../validation/profile");
 
+const ValidateExperienceInput = require("../../validation/experience");
+
+const ValidateEducationInput = require("../../validation/education");
+
 router.get("/test", (req, res) => res.send("hi"));
 
 router.get("/handle/:handle", (req, res) => {
@@ -126,4 +130,65 @@ router.post(
       });
   }
 );
+
+router.post(
+  "/experience",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    const { errors, isValid } = ValidateExperienceInput(req.body);
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+    Profile.findOne({ user: req.user._id }).then(profile => {
+      const newExp = {
+        title: req.body.title,
+        company: req.body.company,
+        location: req.body.location,
+        from: req.body.from,
+        to: req.body.to,
+        current: req.body.current,
+        description: req.body.description
+      };
+      profile.experience.unshift(newExp);
+      profile.save().then(profile => res.json(profile));
+    });
+  }
+);
+
+router.post(
+  "/education",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    const { errors, isValid } = ValidateEducationInput(req.body);
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+    Profile.findOne({ user: req.user._id }).then(profile => {
+      const newEdu = {
+        school: req.body.school,
+        degree: req.body.degree,
+        fieldofstudy: req.body.fieldofstudy,
+        from: req.body.from,
+        to: req.body.to,
+        current: req.body.current,
+        description: req.body.description
+      };
+      profile.education.unshift(newEdu);
+      profile.save().then(profile => res.json(profile));
+    });
+  }
+);
+
+router.delete(
+  "/experience/:exp_id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    Profile.findOne({ user: req.user._id }).then(profile => {
+      const removeByIndex = profile.experience.map(item => item._id);
+      profile.experience.splice(removeByIndex, 1);
+      profile.save().then(profile => res.json(profile));
+    });
+  }
+);
+
 module.exports = router;
