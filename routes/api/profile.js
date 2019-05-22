@@ -183,11 +183,27 @@ router.delete(
   "/experience/:exp_id",
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
-    Profile.findOne({ user: req.user._id }).then(profile => {
-      const removeByIndex = profile.experience.map(item => item._id);
-      profile.experience.splice(removeByIndex, 1);
-      profile.save().then(profile => res.json(profile));
-    });
+    Profile.findOne({ user: req.user._id })
+      .then(profile => {
+        const removeByIndex = profile.experience.map(item => item._id);
+        profile.experience.splice(removeByIndex, 1);
+        profile.save().then(profile => res.json(profile));
+      })
+      .catch(err => res.json(err));
+  }
+);
+
+router.delete(
+  "/education/:edu_id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    Profile.findOne({ user: req.user._id })
+      .then(profile => {
+        const removeByIndex = profile.education.map(item => item._id);
+        profile.education.splice(removeByIndex, 1);
+        profile.save().then(profile => res.json(profile));
+      })
+      .catch(err => res.json(err));
   }
 );
 
