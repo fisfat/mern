@@ -185,7 +185,9 @@ router.delete(
   (req, res) => {
     Profile.findOne({ user: req.user._id })
       .then(profile => {
-        const removeByIndex = profile.experience.map(item => item._id);
+        const removeByIndex = profile.experience
+          .map(item => item._id)
+          .indexOf(req.params.exp_id);
         profile.experience.splice(removeByIndex, 1);
         profile.save().then(profile => res.json(profile));
       })
@@ -199,7 +201,9 @@ router.delete(
   (req, res) => {
     Profile.findOne({ user: req.user._id })
       .then(profile => {
-        const removeByIndex = profile.education.map(item => item._id);
+        const removeByIndex = profile.education
+          .map(item => item._id)
+          .indexOf(req.params.edu_id);
         profile.education.splice(removeByIndex, 1);
         profile.save().then(profile => res.json(profile));
       })
