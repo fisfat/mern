@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route } from "react-router-dom";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/layouts/Navbar";
 import Footer from "./components/layouts/Footer";
@@ -16,6 +16,8 @@ import setAuthToken from "./utils/setAuthToken";
 import { Provider } from "react-redux";
 import store from "./store";
 
+import PrivateRoute from "./components/commons/PrivateRoute";
+
 if (localStorage.jwtToken) {
   setAuthToken(localStorage.jwtToken);
 
@@ -26,9 +28,10 @@ if (localStorage.jwtToken) {
   const currentTime = Date.now() / 1000;
 
   if (decoded.exp < currentTime) {
+    // window.location.href("/login");
     store.dispatch(logoutUser());
     store.dispatch(clearCurrentProfile());
-    // window.location.href("/login");
+    // this.props.history.push("/login");
   }
 }
 
@@ -42,7 +45,9 @@ function App() {
           <div className="container">
             <Route exact path="/login" component={Login} />
             <Route exact path="/register" component={Register} />
-            <Route exact path="/dashboard" component={Dashboard} />
+            <Switch>
+              <PrivateRoute exact path="/dashboard" component={Dashboard} />
+            </Switch>
           </div>
           <Footer />
         </div>
